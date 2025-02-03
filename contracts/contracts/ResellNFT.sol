@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
 import {ResellToken} from "./token/ResellToken.sol";
@@ -24,7 +24,7 @@ contract ResellNFT is ResellToken, ProductPriceDetails, Ownable {
      * Events
      */
     event SetIssuer(address indexed issuer);
-    event ProductAdded(uint256 indexed tokenId, string tokenURI);
+    event ProductAdded(uint256 indexed tokenId, string tokenURI, uint256 price);
 
     constructor() Ownable(msg.sender) {}
 
@@ -45,6 +45,18 @@ contract ResellNFT is ResellToken, ProductPriceDetails, Ownable {
         _;
     }
 
+    modifier onlyIssuerOrOwner(uint256 _tokenId) {
+        if (msg.sender != ownerOf(_tokenId) && msg.sender != s_issuer) {
+            revert ResellNFT__OnlyITokenOwnerAllowded();
+        }
+        _;
+    }
+
+    /**
+     * This function sets address of issuer which has access of minting token
+     * only token owner has access to set issuer address
+     * @param issuer address of issuer
+     */
     function setIssuer(address issuer) external onlyOwner {
         s_issuer = issuer;
         emit SetIssuer(issuer);
@@ -57,9 +69,10 @@ contract ResellNFT is ResellToken, ProductPriceDetails, Ownable {
     {
         tokenId = _mintResellToken(to, tokenURI);
         _updatePrice(tokenId, price);
+        emit ProductAdded(tokenId, tokenURI, price);
     }
 
-    function updateProductPrice(uint256 tokenId, uint256 price) external onlyTokenOwner(tokenId) {
+    function updateProductPrice(uint256 tokenId, uint256 price) external onlyIssuerOrOwner(tokenId) {
         _updatePrice(tokenId, price);
     }
 
