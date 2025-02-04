@@ -1,13 +1,14 @@
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox-viem/network-helpers";
-import hre from "hardhat";
+import hre, { ignition } from "hardhat";
 import { expect } from "chai";
 import { getAddress } from "viem";
+import ResellNFTModule from "../ignition/modules/ResellNFT";
 
 describe("ResellNFT", () => {
   async function deployResellNFT() {
     const [owner, otherAccount] = await hre.viem.getWalletClients();
 
-    const resellNFT = await hre.viem.deployContract("ResellNFT");
+    const { resellNFT } = await ignition.deploy(ResellNFTModule);
 
     const publicClient = await hre.viem.getPublicClient();
 
@@ -79,7 +80,7 @@ describe("ResellNFT", () => {
           tokenURI,
           100n,
         ])
-      ).to.be.rejectedWith();
+      ).to.be.rejectedWith("ResellNFT__OnlyIssuerOrItselfIsAllowded");
     });
 
     it("should mint if caller is owner", async () => {

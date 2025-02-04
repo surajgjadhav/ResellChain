@@ -6,12 +6,17 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ResellNFT} from "./ResellNFT.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {IEOFeedAdapter} from "./interfaces/IEOFeedAdapter.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 contract ResellMarketplace is Ownable, IERC721Receiver, ReentrancyGuard {
     /**
      * Errors
      */
     error ResellMarketplace__OnlyOwnerCanListProduct();
+    error ResellMarketplace__InvalidRoundId();
+    error ResellMarketplace__PriceFeedDdosed();
+    error ResellMarketplace__StalePriceFeed();
 
     struct NFTDetails {
         uint256 tokenId;
@@ -24,11 +29,14 @@ contract ResellMarketplace is Ownable, IERC721Receiver, ReentrancyGuard {
 
     ResellNFT internal immutable i_resellNFT;
     IERC20 internal immutable i_usdc;
+    IEOFeedAdapter internal s_usdcUsdPF;
+    uint256 private constant USDC_DECIMALS = 6; // USDC uses 6 decimals
 
     mapping(uint256 id => NFTDetails details) private s_idToNftDt;
     uint256 private s_nftsCount;
     uint256 private s_nftsListed;
     uint256 private s_nftsSold;
+    uint256 private s_usdcUsdFeedHeartbeat;
 
     /**
      * Events
@@ -37,7 +45,11 @@ contract ResellMarketplace is Ownable, IERC721Receiver, ReentrancyGuard {
     event ProductListed(uint256 indexed tokenId, string tokenURI, address seller, address owner, uint256 price);
     event ProductSold(uint256 indexed tokenId, string tokenURI, address seller, address owner, uint256 price);
 
-    constructor() Ownable(msg.sender) {}
+    constructor(address rtNFT, address usdc, address usdcUsdPF) Ownable(msg.sender) {
+        i_resellNFT = ResellNFT(rtNFT);
+        i_usdc = IERC20(usdc);
+        s_usdcUsdPF = IEOFeedAdapter(usdcUsdPF);
+    }
 
     /**
      * Modifiers
@@ -49,12 +61,31 @@ contract ResellMarketplace is Ownable, IERC721Receiver, ReentrancyGuard {
         _;
     }
 
-    function onERC721Received(address operator, address from, uint256 tokenId, bytes memory data)
-        public
-        override
-        returns (bytes4)
+    function setUsdcUsdPriceFeedDetails(address usdcUsdAggregatorAddress, uint256 usdcUsdFeedHeartbeat)
+        external
+        onlyOwner
     {
-        return this.onERC721Received.selector;
+        s_usdcUsdPF = IEOFeedAdapter(usdcUsdAggregatorAddress);
+        s_usdcUsdFeedHeartbeat = usdcUsdFeedHeartbeat;
+    }
+
+    function mintAndListProduct(string memory tokenURI, uint256 price)
+        external
+        returns (ResellNFT.TokenDetails memory tokenDetails)
+    {
+        uint256 tokenId = mintProduct(tokenURI, price);
+        listProduct(tokenId);
+        tokenDetails = ResellNFT.TokenDetails({id: tokenId, uri: tokenURI, price: price});
+    }
+
+    function updateProductPrice(uint256 tokenId, uint256 price) external {
+        i_resellNFT.updateProductPrice(tokenId, price);
+    }
+
+    function delistProduct(uint256 tokenId) external onlyTokenOwner(tokenId) {
+        s_nftsListed--;
+        s_idToNftDt[tokenId].listed = false;
+        i_resellNFT.safeTransferFrom(address(this), msg.sender, tokenId);
     }
 
     function mintProduct(string memory tokenURI, uint256 price) public returns (uint256 tokenId) {
@@ -74,25 +105,6 @@ contract ResellMarketplace is Ownable, IERC721Receiver, ReentrancyGuard {
         s_idToNftDt[tokenId].listed = true;
         i_resellNFT.transferFrom(msg.sender, address(this), tokenId);
         emit ProductListed(tokenDetails.id, tokenDetails.uri, address(this), msg.sender, tokenDetails.price);
-    }
-
-    function mintAndListProduct(string memory tokenURI, uint256 price)
-        external
-        returns (ResellNFT.TokenDetails memory tokenDetails)
-    {
-        uint256 tokenId = mintProduct(tokenURI, price);
-        listProduct(tokenId);
-        tokenDetails = ResellNFT.TokenDetails({id: tokenId, uri: tokenURI, price: price});
-    }
-
-    function updateProductPrice(uint256 tokenId, uint256 price) external {
-        i_resellNFT.updateProductPrice(tokenId, price);
-    }
-
-    function delistProduct(uint256 tokenId) external onlyTokenOwner(tokenId) {
-        s_idToNftDt[tokenId].listed = false;
-        s_nftsListed--;
-        i_resellNFT.safeTransferFrom(address(this), msg.sender, tokenId);
     }
 
     function getMyNfts() public view returns (NFTDetails[] memory) {
@@ -132,5 +144,54 @@ contract ResellMarketplace is Ownable, IERC721Receiver, ReentrancyGuard {
             }
         }
         return nfts;
+    }
+
+    function getUsdcPriceInUsd() public view returns (uint256) {
+        uint80 _roundId;
+        int256 _price;
+        uint256 _updatedAt;
+        try s_usdcUsdPF.latestRoundData() returns (
+            uint80 roundId,
+            int256 price,
+            uint256,
+            /* startedAt */
+            uint256 updatedAt,
+            uint80 /* answeredInRound */
+        ) {
+            _roundId = roundId;
+            _price = price;
+            _updatedAt = updatedAt;
+        } catch {
+            revert ResellMarketplace__PriceFeedDdosed();
+        }
+
+        if (_roundId == 0) revert ResellMarketplace__InvalidRoundId();
+
+        if (_updatedAt < block.timestamp - s_usdcUsdFeedHeartbeat) {
+            revert ResellMarketplace__StalePriceFeed();
+        }
+
+        return uint256(_price);
+    }
+
+    function getValuationInUsdc(uint256 tokenId) public view returns (uint256) {
+        uint256 valuation = i_resellNFT.getTokenPrice(tokenId);
+
+        uint256 usdcPrice = getUsdcPriceInUsd();
+
+        uint256 feedDecimals = s_usdcUsdPF.decimals();
+
+        uint256 valuationInUsdc = Math.mulDiv((valuation * usdcPrice), 10 ** USDC_DECIMALS, 10 ** feedDecimals); // Adjust the valuation from USD (1e8) to USDC (1e6)
+
+        return valuationInUsdc;
+    }
+
+    function onERC721Received(address operator, address from, uint256 tokenId, bytes memory data)
+        public
+        pure
+        override
+        returns (bytes4)
+    {
+        return this.onERC721Received.selector;
     }
 }
