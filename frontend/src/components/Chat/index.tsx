@@ -1,253 +1,362 @@
 "use client";
-
-import * as React from "react";
-import { Check, Plus, Send } from "lucide-react";
-
-import { cn } from "@/lib/utils";
-import { Input } from "../ui/input";
+import { Button } from "@/components/ui/button";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../ui/tooltip";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "../ui/command";
-import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+  ChatBubble,
+  ChatBubbleMessage,
+  ChatBubbleTimestamp,
+} from "@/components/ui/chat/chat-bubble";
+import { ChatInput } from "@/components/ui/chat/chat-input";
+import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
+import { useTransition, animated, type AnimatedProps } from "@react-spring/web";
+import { Paperclip, Send, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import type { Content, UUID } from "@elizaos/core";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api";
+import { cn, moment } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import AIWriter from "react-aiwriter";
+import { useAutoScroll } from "../ui/chat/hooks/useAutoScroll";
+import ChatTtsButton from "../ui/chat/chat-tts-button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import CopyButton from "../CopyButton";
+import { Avatar, AvatarImage } from "../ui/avatar";
+import { randomUUID } from "crypto";
+import { AudioRecorder } from "../ui/chat/audio-recorder";
+import { Badge } from "../ui/badge";
 
-const users = [
-  {
-    name: "Olivia Martin",
-    email: "m@example.com",
-    avatar: "/avatars/01.png",
-  },
-  {
-    name: "Isabella Nguyen",
-    email: "isabella.nguyen@email.com",
-    avatar: "/avatars/03.png",
-  },
-  {
-    name: "Emma Wilson",
-    email: "emma@example.com",
-    avatar: "/avatars/05.png",
-  },
-  {
-    name: "Jackson Lee",
-    email: "lee@example.com",
-    avatar: "/avatars/02.png",
-  },
-  {
-    name: "William Kim",
-    email: "will@email.com",
-    avatar: "/avatars/04.png",
-  },
-] as const;
+export interface IAttachment {
+  url: string;
+  contentType?: string; // Make contentType optional
+  title: string;
+}
 
-type User = (typeof users)[number];
+type ExtraContentFields = {
+  user: string;
+  createdAt: number;
+  isLoading?: boolean;
+};
 
-export function Chat() {
-  const [open, setOpen] = React.useState(false);
-  const [selectedUsers, setSelectedUsers] = React.useState<User[]>([]);
+type ContentWithUser = Content & ExtraContentFields;
 
-  const [messages, setMessages] = React.useState([
-    {
-      role: "agent",
-      content: "Hi, how can I help you today?",
+type AnimatedDivProps = AnimatedProps<{ style: React.CSSProperties }> & {
+  children?: React.ReactNode;
+};
+// { agentId }: { agentId: UUID }
+
+const Chat = () => {
+  const agentId = "162d87a7-0a19-4092-9ad2-07ce6ff230a6";
+  const { toast } = useToast();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [input, setInput] = useState("");
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const queryClient = useQueryClient();
+
+  const getMessageVariant = (role: string) =>
+    role !== "user" ? "received" : "sent";
+
+  const { scrollRef, isAtBottom, scrollToBottom, disableAutoScroll } =
+    useAutoScroll({
+      smooth: true,
+    });
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [queryClient.getQueryData(["messages", agentId])]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, []);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (e.nativeEvent.isComposing) return;
+      handleSendMessage(e as unknown as React.FormEvent<HTMLFormElement>);
+    }
+  };
+
+  const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!input) return;
+
+    const attachments: IAttachment[] | undefined = selectedFile
+      ? [
+          {
+            url: URL.createObjectURL(selectedFile),
+            contentType: selectedFile.type,
+            title: selectedFile.name,
+          },
+        ]
+      : undefined;
+
+    const newMessages = [
+      {
+        text: input,
+        user: "user",
+        createdAt: Date.now(),
+        attachments,
+      },
+      {
+        text: input,
+        user: "system",
+        isLoading: true,
+        createdAt: Date.now(),
+      },
+    ];
+
+    queryClient.setQueryData(
+      ["messages", agentId],
+      (old: ContentWithUser[] = []) => [...old, ...newMessages]
+    );
+
+    sendMessageMutation.mutate({
+      message: input,
+      selectedFile: selectedFile ? selectedFile : null,
+    });
+
+    setSelectedFile(null);
+    setInput("");
+    formRef.current?.reset();
+  };
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  const sendMessageMutation = useMutation({
+    mutationKey: ["send_message", agentId],
+    mutationFn: ({
+      message,
+      selectedFile,
+    }: {
+      message: string;
+      selectedFile?: File | null;
+    }) => apiClient.sendMessage(agentId, message, selectedFile),
+    onSuccess: (newMessages: ContentWithUser[]) => {
+      queryClient.setQueryData(
+        ["messages", agentId],
+        (old: ContentWithUser[] = []) => [
+          ...old.filter((msg) => !msg.isLoading),
+          ...newMessages.map((msg) => ({
+            ...msg,
+            createdAt: Date.now(),
+          })),
+        ]
+      );
     },
-    {
-      role: "user",
-      content: "Hey, I'm having trouble with my account.",
+    onError: (e) => {
+      toast({
+        variant: "destructive",
+        title: "Unable to send message",
+        description: e.message,
+      });
     },
-    {
-      role: "agent",
-      content: "What seems to be the problem?",
-    },
-    {
-      role: "user",
-      content: "I can't log in.",
-    },
-  ]);
-  const [input, setInput] = React.useState("");
-  const inputLength = input.trim().length;
+  });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file?.type.startsWith("image/")) {
+      setSelectedFile(file);
+    }
+  };
+
+  const messages =
+    queryClient.getQueryData<ContentWithUser[]>(["messages", agentId]) || [];
+
+  const transitions = useTransition(messages, {
+    keys: (message) => `${message.createdAt}-${message.user}-${message.text}`,
+    from: { opacity: 0, transform: "translateY(50px)" },
+    enter: { opacity: 1, transform: "translateY(0px)" },
+    leave: { opacity: 0, transform: "translateY(10px)" },
+  });
+
+  const CustomAnimatedDiv = animated.div as React.FC<AnimatedDivProps>;
 
   return (
-    <>
-      <Card>
-        <CardHeader className="flex flex-row items-center">
-          <div className="flex items-center space-x-4">
-            <Avatar>
-              <AvatarImage src="/avatars/01.png" alt="Image" />
-              <AvatarFallback>OM</AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="text-sm font-medium leading-none">Sofia Davis</p>
-              <p className="text-sm text-muted-foreground">m@example.com</p>
+    <div className="flex flex-col w-full h-[calc(100dvh)] p-4">
+      <div className="flex-1 overflow-y-auto">
+        <ChatMessageList
+          scrollRef={scrollRef}
+          isAtBottom={isAtBottom}
+          scrollToBottom={scrollToBottom}
+          disableAutoScroll={disableAutoScroll}
+        >
+          {transitions((style, message: ContentWithUser) => {
+            const variant = getMessageVariant(message?.user);
+            return (
+              <CustomAnimatedDiv
+                style={{
+                  ...style,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.5rem",
+                  padding: "1rem",
+                }}
+              >
+                <ChatBubble
+                  variant={variant}
+                  className="flex flex-row items-center gap-2"
+                >
+                  {message?.user !== "user" ? (
+                    <Avatar className="size-8 p-1 border rounded-full select-none">
+                      <AvatarImage src="/elizaos-icon.png" />
+                    </Avatar>
+                  ) : null}
+                  <div className="flex flex-col">
+                    <ChatBubbleMessage isLoading={message?.isLoading}>
+                      {message?.user !== "user" ? (
+                        <AIWriter>{message?.text}</AIWriter>
+                      ) : (
+                        message?.text
+                      )}
+                      {/* Attachments */}
+                      <div>
+                        {message?.attachments?.map(
+                          (attachment: IAttachment) => (
+                            <div
+                              className="flex flex-col gap-1 mt-2"
+                              key={`${attachment.url}-${attachment.title}`}
+                            >
+                              <img
+                                alt="attachment"
+                                src={attachment.url}
+                                width="100%"
+                                height="100%"
+                                className="w-64 rounded-md"
+                              />
+                              <div className="flex items-center justify-between gap-4">
+                                <span />
+                                <span />
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </ChatBubbleMessage>
+                    <div className="flex items-center gap-4 justify-between w-full mt-1">
+                      {message?.text && !message?.isLoading ? (
+                        <div className="flex items-center gap-1">
+                          <CopyButton text={message?.text} />
+                          <ChatTtsButton
+                            agentId={agentId}
+                            text={message?.text}
+                          />
+                        </div>
+                      ) : null}
+                      <div
+                        className={cn([
+                          message?.isLoading ? "mt-2" : "",
+                          "flex items-center justify-between gap-4 select-none",
+                        ])}
+                      >
+                        {message?.source ? (
+                          <Badge variant="outline">{message.source}</Badge>
+                        ) : null}
+                        {message?.action ? (
+                          <Badge variant="outline">{message.action}</Badge>
+                        ) : null}
+                        {message?.createdAt ? (
+                          <ChatBubbleTimestamp
+                            timestamp={moment(message?.createdAt).format("LT")}
+                          />
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                </ChatBubble>
+              </CustomAnimatedDiv>
+            );
+          })}
+        </ChatMessageList>
+      </div>
+      <div className="px-4 pb-4">
+        <form
+          ref={formRef}
+          onSubmit={handleSendMessage}
+          className="relative rounded-md border bg-card"
+        >
+          {selectedFile ? (
+            <div className="p-3 flex">
+              <div className="relative rounded-md border p-2">
+                <Button
+                  onClick={() => setSelectedFile(null)}
+                  className="absolute -right-2 -top-2 size-[22px] ring-2 ring-background"
+                  variant="outline"
+                  size="icon"
+                >
+                  <X />
+                </Button>
+                <img
+                  alt="Selected file"
+                  src={URL.createObjectURL(selectedFile)}
+                  height="100%"
+                  width="100%"
+                  className="aspect-square object-contain w-16"
+                />
+              </div>
             </div>
-          </div>
-          <TooltipProvider delayDuration={0}>
+          ) : null}
+          <ChatInput
+            ref={inputRef}
+            onKeyDown={handleKeyDown}
+            value={input}
+            onChange={({ target }) => setInput(target.value)}
+            placeholder="Type your message here..."
+            className="min-h-12 resize-none rounded-md bg-card border-0 p-3 shadow-none focus-visible:ring-0"
+          />
+          <div className="flex items-center p-3 pt-0">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="ml-auto rounded-full"
-                  onClick={() => setOpen(true)}
-                >
-                  <Plus />
-                  <span className="sr-only">New message</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent sideOffset={10}>New message</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                className={cn(
-                  "flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
-                  message.role === "user"
-                    ? "ml-auto bg-primary text-primary-foreground"
-                    : "bg-muted"
-                )}
-              >
-                {message.content}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-        <CardFooter>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (inputLength === 0) return;
-              setMessages([
-                ...messages,
-                {
-                  role: "user",
-                  content: input,
-                },
-              ]);
-              setInput("");
-            }}
-            className="flex w-full items-center space-x-2"
-          >
-            <Input
-              id="message"
-              placeholder="Type your message..."
-              className="flex-1"
-              autoComplete="off"
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-            />
-            <Button type="submit" size="icon" disabled={inputLength === 0}>
-              <Send />
-              <span className="sr-only">Send</span>
-            </Button>
-          </form>
-        </CardFooter>
-      </Card>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="gap-0 p-0 outline-none">
-          <DialogHeader className="px-4 pb-4 pt-5">
-            <DialogTitle>New message</DialogTitle>
-            <DialogDescription>
-              Invite a user to this thread. This will create a new group
-              message.
-            </DialogDescription>
-          </DialogHeader>
-          <Command className="overflow-hidden rounded-t-none border-t bg-transparent">
-            <CommandInput placeholder="Search user..." />
-            <CommandList>
-              <CommandEmpty>No users found.</CommandEmpty>
-              <CommandGroup className="p-2">
-                {users.map((user) => (
-                  <CommandItem
-                    key={user.email}
-                    className="flex items-center px-2"
-                    onSelect={() => {
-                      if (selectedUsers.includes(user)) {
-                        return setSelectedUsers(
-                          selectedUsers.filter(
-                            (selectedUser) => selectedUser !== user
-                          )
-                        );
+                <div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      if (fileInputRef.current) {
+                        fileInputRef.current.click();
                       }
-
-                      return setSelectedUsers(
-                        [...users].filter((u) =>
-                          [...selectedUsers, user].includes(u)
-                        )
-                      );
                     }}
                   >
-                    <Avatar>
-                      <AvatarImage src={user.avatar} alt="Image" />
-                      <AvatarFallback>{user.name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="ml-2">
-                      <p className="text-sm font-medium leading-none">
-                        {user.name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {user.email}
-                      </p>
-                    </div>
-                    {selectedUsers.includes(user) ? (
-                      <Check className="ml-auto flex h-5 w-5 text-primary" />
-                    ) : null}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-          <DialogFooter className="flex items-center border-t p-4 sm:justify-between">
-            {selectedUsers.length > 0 ? (
-              <div className="flex -space-x-2 overflow-hidden">
-                {selectedUsers.map((user) => (
-                  <Avatar
-                    key={user.email}
-                    className="inline-block border-2 border-background"
-                  >
-                    <AvatarImage src={user.avatar} />
-                    <AvatarFallback>{user.name[0]}</AvatarFallback>
-                  </Avatar>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Select users to add to this thread.
-              </p>
-            )}
+                    <Paperclip className="size-4" />
+                    <span className="sr-only">Attach file</span>
+                  </Button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="left">
+                <p>Attach file</p>
+              </TooltipContent>
+            </Tooltip>
+            <AudioRecorder
+              agentId={agentId}
+              onChange={(newInput: string) => setInput(newInput)}
+            />
             <Button
-              disabled={selectedUsers.length < 2}
-              onClick={() => {
-                setOpen(false);
-              }}
+              disabled={!input || sendMessageMutation?.isPending}
+              type="submit"
+              size="sm"
+              className="ml-auto gap-1.5 h-[30px]"
             >
-              Continue
+              {sendMessageMutation?.isPending ? "..." : "Send Message"}
+              <Send className="size-3.5" />
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+          </div>
+        </form>
+      </div>
+    </div>
   );
-}
+};
+
+export default Chat;

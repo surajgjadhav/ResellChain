@@ -3,4 +3,5 @@ export enum RoutePathEnum {
   MARKETPLACE = "/marketplace",
   LIST_PRODUCT = "/list",
   PORTFOLIO = "/portfolio",
+  ASK_AGENT = "/agent",
 }

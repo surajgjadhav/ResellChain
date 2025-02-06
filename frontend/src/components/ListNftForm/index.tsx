@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,8 +12,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import MintNftForm from "../MintNftForm";
+import { useMintNftForm } from "@/hooks/useMintNftForm";
+import { FormProvider } from "react-hook-form";
 
 export function ListNftForm() {
+  const formMethods = useMintNftForm();
   return (
     <Tabs defaultValue="account" className="w-[400px]">
       <TabsList className="grid w-full grid-cols-2">
@@ -19,32 +25,9 @@ export function ListNftForm() {
         <TabsTrigger value="password">List</TabsTrigger>
       </TabsList>
       <TabsContent value="account">
-        <Card>
-          <CardHeader>
-            <CardTitle>Mint NFT</CardTitle>
-            <CardDescription>
-              Make changes to your account here. Click save when you&apos;re
-              done.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="space-y-1">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" defaultValue="Pedro Duarte" />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="description">Description</Label>
-              <Input id="description" defaultValue="@peduarte" />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="image">Image</Label>
-              <Input id="image" type="file" />
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button>Mint NFT</Button>
-          </CardFooter>
-        </Card>
+        <FormProvider {...formMethods}>
+          <MintNftForm />
+        </FormProvider>
       </TabsContent>
       <TabsContent value="password">
         <Card>
