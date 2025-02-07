@@ -1,6 +1,6 @@
 import type { UUID, Character } from "@elizaos/core";
 
-const BASE_URL = `http://localhost:5134`;
+const BASE_URL = `http://localhost:3000`;
 
 const fetcher = async ({
   url,

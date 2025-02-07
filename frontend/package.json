@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 5173",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate-abi": "wagmi generate"
   },
   "dependencies": {
     "@elizaos/core": "^0.1.9",
@@ -31,7 +32,9 @@
     "cmdk": "^1.0.0",
     "dayjs": "^1.11.13",
     "lucide-react": "^0.474.0",
+    "multer": "^1.4.5-lts.1",
     "next": "15.1.6",
+    "pinata-web3": "^0.5.4",
     "react": "^19.0.0",
     "react-aiwriter": "^1.0.0",
     "react-dom": "^19.0.0",

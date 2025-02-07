@@ -1,5 +1,5 @@
 import { defineConfig } from "@wagmi/cli";
-import { react, foundry } from "@wagmi/cli/plugins";
+import { react, hardhat } from "@wagmi/cli/plugins";
 import { erc20Abi } from "viem";
 
 export default defineConfig({
@@ -11,10 +11,14 @@ export default defineConfig({
     },
   ],
   plugins: [
-    foundry({
+    hardhat({
       project: "../contracts",
-      artifacts: "../contracts/out",
-      include: ["DeCarsToken.sol/**", "DeCarsMarketplace.sol/**"],
+      artifacts: "../contracts/artifacts",
+      include: [
+        "contracts/ResellNFT.sol/**",
+        "contracts/ResellMarketplace.sol/**",
+      ],
+      exclude: ["*.d.ts"],
     }),
     react(),
   ],

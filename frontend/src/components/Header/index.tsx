@@ -15,9 +15,9 @@ export interface Navigation {
 
 const navigation: Navigation[] = [
   { name: "Marketplace", href: RoutePathEnum.MARKETPLACE },
-  { name: "Ask AI", href: RoutePathEnum.LIST_PRODUCT },
+  { name: "Ask AI", href: RoutePathEnum.ASK_AGENT },
   { name: "List Product", href: RoutePathEnum.LIST_PRODUCT },
-  { name: "Profile", href: RoutePathEnum.PORTFOLIO },
+  { name: "Portfolio", href: RoutePathEnum.PORTFOLIO },
 ];
 
 export default function Header() {

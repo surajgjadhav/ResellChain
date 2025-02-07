@@ -10,8 +10,8 @@ import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
 import { useTransition, animated, type AnimatedProps } from "@react-spring/web";
 import { Paperclip, Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { Content, UUID } from "@elizaos/core";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { Content } from "@elizaos/core";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
 import { cn, moment } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -21,7 +21,6 @@ import ChatTtsButton from "../ui/chat/chat-tts-button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import CopyButton from "../CopyButton";
 import { Avatar, AvatarImage } from "../ui/avatar";
-import { randomUUID } from "crypto";
 import { AudioRecorder } from "../ui/chat/audio-recorder";
 import { Badge } from "../ui/badge";
 
@@ -44,8 +43,24 @@ type AnimatedDivProps = AnimatedProps<{ style: React.CSSProperties }> & {
 };
 // { agentId }: { agentId: UUID }
 
+export interface Agent {
+  id: `${string}-${string}-${string}-${string}-${string}`;
+  name: string;
+  clients: string[];
+}
+
 const Chat = () => {
-  const agentId = "162d87a7-0a19-4092-9ad2-07ce6ff230a6";
+  /* const query = useQuery({
+    queryKey: ["agents"],
+    queryFn: () => apiClient.getAgents(),
+  });
+
+  const agents = query?.data?.agents as Agent[];
+
+  const resellAgent = agents?.find((agent) => agent.name === "resell_agent");
+  console.log("resellAgent: ", resellAgent); */
+
+  const agentId = "7cf9679d-0294-0815-b539-85cd638762d9";
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [input, setInput] = useState("");
@@ -204,8 +219,11 @@ const Chat = () => {
                   className="flex flex-row items-center gap-2"
                 >
                   {message?.user !== "user" ? (
-                    <Avatar className="size-8 p-1 border rounded-full select-none">
-                      <AvatarImage src="/elizaos-icon.png" />
+                    <Avatar className="mb-2">
+                      <AvatarImage
+                        src="/resell-agent-icon.png"
+                        alt="resell-agent"
+                      />
                     </Avatar>
                   ) : null}
                   <div className="flex flex-col">

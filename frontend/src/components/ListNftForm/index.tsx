@@ -15,21 +15,41 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MintNftForm from "../MintNftForm";
 import { useMintNftForm } from "@/hooks/useMintNftForm";
 import { FormProvider } from "react-hook-form";
+import { useState } from "react";
+import { useReadResellMarketplaceGetUsdcPriceInUsd } from "@/generated";
+import { rsMarketplaceAddress } from "@/config/contract";
+
+enum ListNftFormState {
+  MINT_NFT = "MINT_NFT",
+  LIST_NFT = "LIST_NFT",
+}
 
 export function ListNftForm() {
+  const [formState, setFormState] = useState<ListNftFormState>(
+    ListNftFormState.MINT_NFT
+  );
+
+  const { data, isLoading } = useReadResellMarketplaceGetUsdcPriceInUsd({
+    address: rsMarketplaceAddress,
+  });
+
+  console.log("price: ", isLoading, data);
+
+  const goToListNft = () => setFormState(ListNftFormState.LIST_NFT);
   const formMethods = useMintNftForm();
+
   return (
-    <Tabs defaultValue="account" className="w-[400px]">
+    <Tabs value={formState} className="w-[400px]">
       <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="account">Mint</TabsTrigger>
-        <TabsTrigger value="password">List</TabsTrigger>
+        <TabsTrigger value={ListNftFormState.MINT_NFT}>Mint</TabsTrigger>
+        <TabsTrigger value={ListNftFormState.LIST_NFT}>List</TabsTrigger>
       </TabsList>
-      <TabsContent value="account">
+      <TabsContent value={ListNftFormState.MINT_NFT}>
         <FormProvider {...formMethods}>
-          <MintNftForm />
+          <MintNftForm goToListNft={goToListNft} />
         </FormProvider>
       </TabsContent>
-      <TabsContent value="password">
+      <TabsContent value={ListNftFormState.LIST_NFT}>
         <Card>
           <CardHeader>
             <CardTitle>List</CardTitle>

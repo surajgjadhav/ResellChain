@@ -2,8 +2,9 @@ import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 import ResellNFTModule from "./ResellNFT";
 import { parseUnits } from "viem";
 
-const USDC_DECIMALS = 6;
+const USDC_DECIMALS = 8;
 const USDC_USD_PRICE = parseUnits("1", USDC_DECIMALS);
+const PRICE_FEED_HEART_BEAT = 24 * 60 * 60; // 24 hrs
 
 const MOCK_USDC_SUPPLY: bigint = BigInt(1000);
 const USDC = "USDC";
@@ -23,11 +24,19 @@ const ResellMarketplaceModule = buildModule("ResellMarketplaceModule", (m) => {
     initialAnswer,
   ]);
 
+  const priceFeedHeartBeat = m.getParameter(
+    "priceFeedHeartBeat",
+    PRICE_FEED_HEART_BEAT
+  );
+
   const resellMarketplace = m.contract("ResellMarketplace", [
     resellNFT,
     mockUSDC,
     mockIEOFeedAdapter,
+    priceFeedHeartBeat,
   ]);
+
+  m.call(resellNFT, "setIssuer", [resellMarketplace]);
 
   return { resellNFT, mockUSDC, mockIEOFeedAdapter, resellMarketplace };
 });

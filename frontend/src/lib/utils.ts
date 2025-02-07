@@ -14,3 +14,11 @@ export const moment = dayjs;
 export const formatAgentName = (name: string) => {
   return name.substring(0, 2);
 };
+
+export const getFormattedCurrency = (amount: number | bigint) => {
+  const CurrencyFormat = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
+  return CurrencyFormat.format(amount);
+};

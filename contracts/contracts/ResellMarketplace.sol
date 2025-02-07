@@ -14,6 +14,7 @@ contract ResellMarketplace is Ownable, IERC721Receiver, ReentrancyGuard {
      * Errors
      */
     error ResellMarketplace__OnlyOwnerCanListProduct();
+    error ResellMarketplace__OnlyResellTokenSupported();
     error ResellMarketplace__InvalidRoundId();
     error ResellMarketplace__PriceFeedDdosed();
     error ResellMarketplace__StalePriceFeed();
@@ -45,10 +46,11 @@ contract ResellMarketplace is Ownable, IERC721Receiver, ReentrancyGuard {
     event ProductListed(uint256 indexed tokenId, string tokenURI, address seller, address owner, uint256 price);
     event ProductSold(uint256 indexed tokenId, string tokenURI, address seller, address owner, uint256 price);
 
-    constructor(address rtNFT, address usdc, address usdcUsdPF) Ownable(msg.sender) {
+    constructor(address rtNFT, address usdc, address usdcUsdPF, uint32 pricefeedHeartbeat) Ownable(msg.sender) {
         i_resellNFT = ResellNFT(rtNFT);
         i_usdc = IERC20(usdc);
         s_usdcUsdPF = IEOFeedAdapter(usdcUsdPF);
+        s_usdcUsdFeedHeartbeat = pricefeedHeartbeat;
     }
 
     /**
@@ -188,10 +190,13 @@ contract ResellMarketplace is Ownable, IERC721Receiver, ReentrancyGuard {
 
     function onERC721Received(address operator, address from, uint256 tokenId, bytes memory data)
         public
-        pure
         override
+        nonReentrant
         returns (bytes4)
     {
+        if (msg.sender != address(i_resellNFT)) {
+            revert ResellMarketplace__OnlyResellTokenSupported();
+        }
         return this.onERC721Received.selector;
     }
 }
