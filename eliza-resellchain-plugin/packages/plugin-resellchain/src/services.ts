@@ -1,107 +1,89 @@
-import {
-    APODResponse,
-    MarsRoverDataResponse
-} from "./types";
+import { createPublicClient, http, parseAbi } from "viem";
+import { hardhat } from "viem/chains";
 
-const BASE_URL = "https://api.nasa.gov/planetary/apod\?api_key\=";
+// Set up Viem client (use your chain's RPC URL)
+const client = createPublicClient({
+    chain: hardhat,
+    transport: http("http://127.0.0.1:8545/"), // Replace with your RPC
+});
 
-export const createNASAService = (apiKey: string) => {
-    const getAPOD = async (): Promise<APODResponse> => {
-        if (!apiKey) {
-            throw new Error("Invalid parameters");
-        }
+// Contract details
+const abi = parseAbi([
+    "function getListedNfts() public view returns (NFTDetails[] memory)",
+    "struct NFTDetails { uint256 tokenId; string tokenURI;address seller; address owner; uint256 price; bool listed;}",
+]);
+interface Product {
+    tokenId: bigint;
+    tokenURI: string;
+    seller: `0x${string}`;
+    owner: `0x${string}`;
+    price: bigint;
+    listed: boolean;
+}
+[];
 
+export interface ProductAttributes {
+    trait_type: string;
+    value: string | number;
+}
+
+export interface ProductMetadata {
+    name: string;
+    description: string;
+    image: string;
+    attributes: ProductAttributes[];
+}
+
+export interface ProductInfo extends Product {
+    metadata: ProductMetadata;
+}
+
+const fetchTokenUri = async (tokenURI: Product["tokenURI"]) => {
+    const resp = await fetch(tokenURI, { method: "GET" });
+    const responseJson = (await resp.json()) as { metadata: ProductMetadata };
+    const metadata = responseJson.metadata;
+    console.log("metadata: ", metadata);
+
+    return metadata;
+};
+
+const getNftMetadata = async (nfts: Product[]) => {
+    const fetcdhNftURIs = nfts.map((nft) => fetchTokenUri(nft.tokenURI));
+    const metaDatas = await Promise.all(fetcdhNftURIs);
+    const nftInfo = metaDatas.map((metaData, index) => {
+        return { ...nfts[index], metaData };
+    });
+
+    return nftInfo;
+};
+
+export const createResellChainService = (contractAddress: string) => {
+    const getAllProducts = async (): Promise<string> => {
         try {
-            const url = BASE_URL + apiKey
-            const response = await fetch(url);
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error?.message || response.statusText);
-            }
+            const _products = await client.readContract({
+                address: contractAddress as `0x${string}`,
+                abi,
+                functionName: "getListedNfts",
+            });
 
-            const data = await response.json();
-            return data;
-        } catch (error: any) {
-            console.error("NASA API Error:", error.message);
-            throw error;
+            const products = (_products ? [..._products] : []) as Product[];
+
+            const productsInfo = await getNftMetadata(products);
+
+            const resellProducts = productsInfo.map(
+                ({
+                    tokenId,
+                    price,
+                    metaData: { name, description, image, attributes },
+                }) =>
+                    `Token ID: ${tokenId} - name of the the resell product: ${name} - description of the product: ${description} - price in USD: ${price} - Product Image: ${image} - specifications: ${attributes.toString()}`
+            );
+            return resellProducts.join("\n");
+        } catch (error) {
+            console.error("Error fetching products:", error);
+            return "Due to Technical issues, unable to fetch products now. Sorry for inconvenience. Please try after some time";
         }
     };
 
-    const getMarsRoverPhoto = async (): Promise<MarsRoverDataResponse> => {
-        try {
-            const data = await fetchMarsPhotos(apiKey)
-            return data
-        } catch (error: any) {
-            console.error("NASA Mars Rover API Error:", error.message);
-            throw error;
-        }
-    }
-
-    return { getAPOD, getMarsRoverPhoto };
+    return { getAllProducts };
 };
-
-async function fetchMarsPhotos(apiKey, attempts = 0, maxAttempts = 10) {
-    try {
-        const curiosityCameras = [
-            'FHAZ',
-            'RHAZ',
-            'MAST',
-            'CHEMCAM',
-            'MAHLI',
-            'MARDI',
-            'NAVCAM'
-        ]
-        const opportunityCameras = [
-            'FHAZ',
-            'RHAZ',
-            'PANCAM',
-            'MINITES'
-        ]
-
-        const CURIOUSITY_MAX_SOL = 3400
-        const OPPORTUNITY_MAX_SOL = 4500
-
-        const rovers = {
-          curiosity: {
-            cameras: curiosityCameras,
-            maxSol: CURIOUSITY_MAX_SOL
-          },
-        //   opportunity: {
-        //     cameras: opportunityCameras,
-        //     maxSol: OPPORTUNITY_MAX_SOL
-        //   },
-        }
-
-         // Select a random rover
-         const roverNames = Object.keys(rovers);
-         const randomRover = roverNames[Math.floor(Math.random() * roverNames.length)];
-         const selectedRover = rovers[randomRover as keyof typeof rovers];
-
-         // Get random camera for selected rover
-         const randomCamera = selectedRover.cameras[Math.floor(Math.random() * selectedRover.cameras.length)];
-
-         // Get random sol (Martian day) within rover's max
-         const randomSol = Math.floor(Math.random() * selectedRover.maxSol) + 1;
-
-         const requestURL = `https://api.nasa.gov/mars-photos/api/v1/rovers/${randomRover}/photos?sol=${randomSol}&camera=${randomCamera}&api_key=${apiKey}`
-         console.log('requestURL::::::: ', requestURL)
-         const response = await fetch(requestURL);
-         const data = await response.json();
-
-         if (data.photos.length) {
-            const returnObj = {
-                photo: data.photos[0].img_src,
-                sol: randomSol,
-                camera: randomCamera,
-                rover: randomRover
-            }
-            return returnObj
-        } else if (attempts < maxAttempts) {
-            return fetchMarsPhotos(apiKey, attempts + 1, maxAttempts)
-        } else {
-            throw new Error('No photos found after maximum attempts')
-        }
-    } catch (err) {
-        console.log("error fetch mar rover photos ...", err)
-    }
-}

@@ -1,51 +1,19 @@
 import { ActionExample } from "@elizaos/core";
 
-export const getMarsRoverExamples: ActionExample[][] = [
-    [
-        {
-            user: "{{user1}}",
-            content: {
-                text: "I wonder what mars looks like today?",
-            },
-        },
-        {
-            user: "{{agent}}",
-            content: {
-                text: "Let me fetch a picture from a mars rover.",
-                action: "NASA_GET_MARS_ROVER_PHOTO",
-            },
-        }
-    ],
-    [
-        {
-            user: "{{user1}}",
-            content: {
-                text: "Can you fetch a random picture of Mars?",
-            },
-        },
-        {
-            user: "{{agent}}",
-            content: {
-                text: "Let me fetch a picture from a mars rover.",
-                action: "NASA_GET_MARS_ROVER_PHOTO",
-            },
-        }
-    ],
-]
 
-export const getAPODExamples: ActionExample[][] = [
+export const getProductSuggestionExamples: ActionExample[][] = [
     [
         {
             user: "{{user1}}",
             content: {
-                text: "What's the nasa Astronomy picture of the day?",
+                text: "can you suggest me a phone to buy?",
             },
         },
         {
             user: "{{agent}}",
             content: {
-                text: "Let me get the nasa image of the day.",
-                action: "NASA_GET_APOD",
+                text: "Let me get the best resell product for you:",
+                action: "RESELL_GET_PRODUCTS",
             },
         }
     ],
@@ -53,14 +21,14 @@ export const getAPODExamples: ActionExample[][] = [
         {
             user: "{{user1}}",
             content: {
-                text: "I love space.",
+                text: "I love cars.",
             },
         },
         {
             user: "{{agent}}",
             content: {
-                text: "Oh really, then let me get the nasa image of the day to make your day even better.",
-                action: "NASA_GET_APOD",
+                text: "Oh really, then let me get the best car from our Resell Chain...",
+                action: "RESELL_GET_PRODUCTS",
             },
         }
     ],
@@ -68,13 +36,13 @@ export const getAPODExamples: ActionExample[][] = [
         {
             user: "{{user1}}",
             content: {
-                text: "I am in love with space and space travel.",
+                text: "I want to buy a Phone.",
             },
         },
         {
             user: "{{agent}}",
             content: {
-                text: "Space is beautiful, dark, scary, and vast. Would you like to see a current photo of space from NASA?",
+                text: "Sure, I will suggest the best product for you. can you help with the more details like  ?",
             },
         },
         {
@@ -86,8 +54,8 @@ export const getAPODExamples: ActionExample[][] = [
         {
             user: "{{agent}}",
             content: {
-                text: "Here is the NASA Astronomy Picture of the Day.",
-                action: "NASA_GET_APOD",
+                text: "Here is the product.",
+                action: "RESELL_GET_PRODUCTS",
             },
         }
     ],
@@ -95,13 +63,13 @@ export const getAPODExamples: ActionExample[][] = [
         {
             user: "{{user1}}",
             content: {
-                text: "Space is beautiful, dark, scary, and unfathomably vast.",
+                text: "Samsung phones are superfast now a days.",
             },
         },
         {
             user: "{{agent}}",
             content: {
-                text: "Indeed! Would you like to see a current photo from the NASA astronomy database?",
+                text: "Indeed! Would you like to see phones from our Resell Chain?",
             },
         },
         {
@@ -113,8 +81,8 @@ export const getAPODExamples: ActionExample[][] = [
         {
             user: "{{agent}}",
             content: {
-                text: "Here is the NASA Astronomy Picture of the Day.",
-                action: "NASA_GET_APOD",
+                text: "Here is the Phone that you want.",
+                action: "RESELL_GET_PRODUCTS",
             },
         }
     ],
@@ -122,13 +90,13 @@ export const getAPODExamples: ActionExample[][] = [
         {
             user: "{{user1}}",
             content: {
-                text: "I'm a big fan of space and astronomy.",
+                text: "I'm a big fan of iPhone.",
             },
         },
         {
             user: "{{agent}}",
             content: {
-                text: "Would you like to see the Nasa Astronomy Picture of the Day?",
+                text: "Would you like to see the iPhone for you from Resell Chain?",
             },
         },
         {
@@ -140,8 +108,8 @@ export const getAPODExamples: ActionExample[][] = [
         {
             user: "{{agent}}",
             content: {
-                text: "Here is the NASA Astronomy Picture of the Day.",
-                action: "NASA_GET_APOD",
+                text: "Here is the Best iPhone for you.",
+                action: "RESELL_GET_PRODUCTS",
             },
         }
     ]

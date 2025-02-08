@@ -21,7 +21,6 @@
         "@elizaos/core": "workspace:*",
         "tsup": "8.3.5",
         "zod": "^3.22.4",
-        "chromadb": "1.10.4",
         "viem": "2.22.23"
     },
     "scripts": {

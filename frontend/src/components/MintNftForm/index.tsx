@@ -185,12 +185,12 @@ const MintNftForm = ({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Input placeholder="description" {...field} />
                   </FormControl>
                   <FormDescription>
-                    This is your product&apos;s display name.
+                    This is your product&apos;s Description.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

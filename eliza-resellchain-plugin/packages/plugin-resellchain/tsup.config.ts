@@ -10,6 +10,7 @@ export default defineConfig({
         "dotenv", // Externalize dotenv to prevent bundling
         "fs", // Externalize fs to use Node.js built-in module
         "zod",
-        "path"
+        "path",
+        "viem"
     ],
 });

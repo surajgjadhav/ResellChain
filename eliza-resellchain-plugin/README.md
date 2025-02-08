@@ -1,8 +1,8 @@
-# Eliza NASA Plugin and Tutorial
+# Eliza Resell Product Contract Plugin
 
-This is the codebase and tutorial for building a NASA Eliza plugin.
+This is the codebase for building a Resell Product Suggestion plugin.
 
-Plugin code is located at `plugins/nasa-plugin`.
+Plugin code is located at `plugins/plugin-resellchain`.
 
 ------------------------
 

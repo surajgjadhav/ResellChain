@@ -92,6 +92,7 @@
         "@elizaos/plugin-video-generation": "workspace:*",
         "@elizaos/plugin-web-search": "workspace:*",
         "@elizaos/plugin-zksync-era": "workspace:*",
+        "@elizaos/plugin-nasa": "workspace:*",
         "@elizaos/plugin-resellchain": "workspace:*",
         "readline": "1.3.0",
         "ws": "8.18.0",

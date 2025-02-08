@@ -1,29 +1,33 @@
 import { IAgentRuntime } from "@elizaos/core";
 import { z } from "zod";
 
-export const nasaEnvSchema = z.object({
-    NASA_API_KEY: z.string().min(1, "Nasa API key is required"),
+export const resellEnvSchema = z.object({
+    RESELL_CONTRACT_ADDRESS: z
+        .string()
+        .min(1, "Resell Contract Address is required"),
 });
 
-export type nasaConfig = z.infer<typeof nasaEnvSchema>;
+export type resellConfig = z.infer<typeof resellEnvSchema>;
 
-export async function validateNasaConfig(
+export async function validateResellContractConfig(
     runtime: IAgentRuntime
-): Promise<nasaConfig> {
+): Promise<resellConfig> {
     try {
         const config = {
-            NASA_API_KEY: runtime.getSetting("NASA_API_KEY"),
+            RESELL_CONTRACT_ADDRESS: runtime.getSetting(
+                "RESELL_CONTRACT_ADDRESS"
+            ),
         };
-        console.log('config: ', config)
-        return nasaEnvSchema.parse(config);
+        console.log("config: ", config);
+        return resellEnvSchema.parse(config);
     } catch (error) {
-        console.log("error::::", error)
+        console.log("error::::", error);
         if (error instanceof z.ZodError) {
             const errorMessages = error.errors
                 .map((err) => `${err.path.join(".")}: ${err.message}`)
                 .join("\n");
             throw new Error(
-                `Nasa API configuration validation failed:\n${errorMessages}`
+                `Resell contract configuration validation failed:\n${errorMessages}`
             );
         }
         throw error;
