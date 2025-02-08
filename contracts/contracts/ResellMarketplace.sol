@@ -18,6 +18,9 @@ contract ResellMarketplace is Ownable, IERC721Receiver, ReentrancyGuard {
     error ResellMarketplace__InvalidRoundId();
     error ResellMarketplace__PriceFeedDdosed();
     error ResellMarketplace__StalePriceFeed();
+    error ResellMarketplace__TokenNotListed();
+    error ResellMarketplace__InsufficientAmount();
+    error ResellMarketplace__TransferFailed();
 
     struct NFTDetails {
         uint256 tokenId;
@@ -44,7 +47,7 @@ contract ResellMarketplace is Ownable, IERC721Receiver, ReentrancyGuard {
      */
     event ProductMinted(uint256 indexed tokenId, string tokenURI, uint256 price);
     event ProductListed(uint256 indexed tokenId, string tokenURI, address seller, address owner, uint256 price);
-    event ProductSold(uint256 indexed tokenId, string tokenURI, address seller, address owner, uint256 price);
+    event ProductSold(uint256 indexed tokenId, address seller, address owner, uint256 price);
 
     constructor(address rtNFT, address usdc, address usdcUsdPF, uint32 pricefeedHeartbeat) Ownable(msg.sender) {
         i_resellNFT = ResellNFT(rtNFT);
@@ -61,6 +64,20 @@ contract ResellMarketplace is Ownable, IERC721Receiver, ReentrancyGuard {
             revert ResellMarketplace__OnlyOwnerCanListProduct();
         }
         _;
+    }
+
+    modifier onlyListedTokensAllowded(uint256 _tokenId) {
+        if (!s_idToNftDt[_tokenId].listed) {
+            revert ResellMarketplace__TokenNotListed();
+        }
+        _;
+    }
+
+    function _depositeAmount(uint256 _amount) internal nonReentrant {
+        bool success = i_usdc.transferFrom(msg.sender, address(this), _amount);
+        if (!success) {
+            revert ResellMarketplace__TransferFailed();
+        }
     }
 
     function setUsdcUsdPriceFeedDetails(address usdcUsdAggregatorAddress, uint256 usdcUsdFeedHeartbeat)
@@ -93,7 +110,14 @@ contract ResellMarketplace is Ownable, IERC721Receiver, ReentrancyGuard {
     function mintProduct(string memory tokenURI, uint256 price) public returns (uint256 tokenId) {
         s_nftsCount++;
         tokenId = i_resellNFT.mintAndUpdateProductPrice(msg.sender, tokenURI, price);
-        s_idToNftDt[tokenId] = NFTDetails(tokenId, tokenURI, address(this), msg.sender, price, false);
+        s_idToNftDt[tokenId] = NFTDetails({
+            tokenId: tokenId,
+            tokenURI: tokenURI,
+            seller: address(this),
+            owner: msg.sender,
+            price: price,
+            listed: false
+        });
         emit ProductMinted(tokenId, tokenURI, price);
     }
 
@@ -107,6 +131,22 @@ contract ResellMarketplace is Ownable, IERC721Receiver, ReentrancyGuard {
         s_idToNftDt[tokenId].listed = true;
         i_resellNFT.transferFrom(msg.sender, address(this), tokenId);
         emit ProductListed(tokenDetails.id, tokenDetails.uri, address(this), msg.sender, tokenDetails.price);
+    }
+
+    function buy(uint256 tokenId, uint256 amount) external onlyListedTokensAllowded(tokenId) {
+        s_nftsListed--;
+        s_idToNftDt[tokenId].listed = false;
+        s_idToNftDt[tokenId].owner = msg.sender;
+        uint256 valuation = getValuationInUsdc(tokenId);
+
+        if (valuation > amount) {
+            revert ResellMarketplace__InsufficientAmount();
+        }
+
+        _depositeAmount(amount);
+
+        i_resellNFT.safeTransferFrom(address(this), msg.sender, tokenId);
+        emit ProductSold(tokenId, address(this), msg.sender, amount);
     }
 
     function getMyNfts() public view returns (NFTDetails[] memory) {
@@ -198,5 +238,9 @@ contract ResellMarketplace is Ownable, IERC721Receiver, ReentrancyGuard {
             revert ResellMarketplace__OnlyResellTokenSupported();
         }
         return this.onERC721Received.selector;
+    }
+
+    function getNftDetails(uint256 tokenId) public view returns (NFTDetails memory nftDetails) {
+        nftDetails = s_idToNftDt[tokenId];
     }
 }

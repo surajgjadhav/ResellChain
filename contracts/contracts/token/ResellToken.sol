@@ -9,7 +9,7 @@ contract ResellToken is ERC721URIStorage {
     constructor() ERC721("ResellToken", "RT") {}
 
     function _mintResellToken(address to, string memory tokenURI) internal returns (uint256) {
-        uint256 tokenId = _nextTokenId++;
+        uint256 tokenId = ++_nextTokenId;
         _mint(to, tokenId);
         _setTokenURI(tokenId, tokenURI);
 

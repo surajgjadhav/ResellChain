@@ -1,5 +1,5 @@
 import Container from "@/components/Container";
-import { ListNftForm } from "@/components/ListNftForm";
+import ListNft from "@/components/ListNft";
 import {
   PageHeader,
   PageHeaderDescription,
@@ -14,7 +14,7 @@ const List = () => {
         <PageHeaderDescription>Buy Products</PageHeaderDescription>
       </PageHeader>
       <div className="col-span-full place-self-center">
-        <ListNftForm />
+        <ListNft />
       </div>
     </Container>
   );

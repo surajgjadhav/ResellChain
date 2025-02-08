@@ -16,6 +16,7 @@ export const resellMarketplaceAbi = [
       { name: 'rtNFT', internalType: 'address', type: 'address' },
       { name: 'usdc', internalType: 'address', type: 'address' },
       { name: 'usdcUsdPF', internalType: 'address', type: 'address' },
+      { name: 'pricefeedHeartbeat', internalType: 'uint32', type: 'uint32' },
     ],
     stateMutability: 'nonpayable',
   },
@@ -30,14 +31,22 @@ export const resellMarketplaceAbi = [
     name: 'OwnableUnauthorizedAccount',
   },
   { type: 'error', inputs: [], name: 'ReentrancyGuardReentrantCall' },
+  { type: 'error', inputs: [], name: 'ResellMarketplace__InsufficientAmount' },
   { type: 'error', inputs: [], name: 'ResellMarketplace__InvalidRoundId' },
   {
     type: 'error',
     inputs: [],
     name: 'ResellMarketplace__OnlyOwnerCanListProduct',
   },
+  {
+    type: 'error',
+    inputs: [],
+    name: 'ResellMarketplace__OnlyResellTokenSupported',
+  },
   { type: 'error', inputs: [], name: 'ResellMarketplace__PriceFeedDdosed' },
   { type: 'error', inputs: [], name: 'ResellMarketplace__StalePriceFeed' },
+  { type: 'error', inputs: [], name: 'ResellMarketplace__TokenNotListed' },
+  { type: 'error', inputs: [], name: 'ResellMarketplace__TransferFailed' },
   {
     type: 'event',
     anonymous: false,
@@ -130,12 +139,6 @@ export const resellMarketplaceAbi = [
         indexed: true,
       },
       {
-        name: 'tokenURI',
-        internalType: 'string',
-        type: 'string',
-        indexed: false,
-      },
-      {
         name: 'seller',
         internalType: 'address',
         type: 'address',
@@ -155,6 +158,16 @@ export const resellMarketplaceAbi = [
       },
     ],
     name: 'ProductSold',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'buy',
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
     type: 'function',
@@ -193,6 +206,27 @@ export const resellMarketplaceAbi = [
         name: '',
         internalType: 'struct ResellMarketplace.NFTDetails[]',
         type: 'tuple[]',
+        components: [
+          { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+          { name: 'tokenURI', internalType: 'string', type: 'string' },
+          { name: 'seller', internalType: 'address', type: 'address' },
+          { name: 'owner', internalType: 'address', type: 'address' },
+          { name: 'price', internalType: 'uint256', type: 'uint256' },
+          { name: 'listed', internalType: 'bool', type: 'bool' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'getNftDetails',
+    outputs: [
+      {
+        name: 'nftDetails',
+        internalType: 'struct ResellMarketplace.NFTDetails',
+        type: 'tuple',
         components: [
           { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
           { name: 'tokenURI', internalType: 'string', type: 'string' },
@@ -278,7 +312,7 @@ export const resellMarketplaceAbi = [
     ],
     name: 'onERC721Received',
     outputs: [{ name: '', internalType: 'bytes4', type: 'bytes4' }],
-    stateMutability: 'pure',
+    stateMutability: 'nonpayable',
   },
   {
     type: 'function',
@@ -896,6 +930,15 @@ export const useReadResellMarketplaceGetMyNfts =
   })
 
 /**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link resellMarketplaceAbi}__ and `functionName` set to `"getNftDetails"`
+ */
+export const useReadResellMarketplaceGetNftDetails =
+  /*#__PURE__*/ createUseReadContract({
+    abi: resellMarketplaceAbi,
+    functionName: 'getNftDetails',
+  })
+
+/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link resellMarketplaceAbi}__ and `functionName` set to `"getUsdcPriceInUsd"`
  */
 export const useReadResellMarketplaceGetUsdcPriceInUsd =
@@ -914,15 +957,6 @@ export const useReadResellMarketplaceGetValuationInUsdc =
   })
 
 /**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link resellMarketplaceAbi}__ and `functionName` set to `"onERC721Received"`
- */
-export const useReadResellMarketplaceOnErc721Received =
-  /*#__PURE__*/ createUseReadContract({
-    abi: resellMarketplaceAbi,
-    functionName: 'onERC721Received',
-  })
-
-/**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link resellMarketplaceAbi}__ and `functionName` set to `"owner"`
  */
 export const useReadResellMarketplaceOwner =
@@ -937,6 +971,15 @@ export const useReadResellMarketplaceOwner =
 export const useWriteResellMarketplace = /*#__PURE__*/ createUseWriteContract({
   abi: resellMarketplaceAbi,
 })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link resellMarketplaceAbi}__ and `functionName` set to `"buy"`
+ */
+export const useWriteResellMarketplaceBuy =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: resellMarketplaceAbi,
+    functionName: 'buy',
+  })
 
 /**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link resellMarketplaceAbi}__ and `functionName` set to `"delistProduct"`
@@ -972,6 +1015,15 @@ export const useWriteResellMarketplaceMintProduct =
   /*#__PURE__*/ createUseWriteContract({
     abi: resellMarketplaceAbi,
     functionName: 'mintProduct',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link resellMarketplaceAbi}__ and `functionName` set to `"onERC721Received"`
+ */
+export const useWriteResellMarketplaceOnErc721Received =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: resellMarketplaceAbi,
+    functionName: 'onERC721Received',
   })
 
 /**
@@ -1017,6 +1069,15 @@ export const useSimulateResellMarketplace =
   /*#__PURE__*/ createUseSimulateContract({ abi: resellMarketplaceAbi })
 
 /**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link resellMarketplaceAbi}__ and `functionName` set to `"buy"`
+ */
+export const useSimulateResellMarketplaceBuy =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: resellMarketplaceAbi,
+    functionName: 'buy',
+  })
+
+/**
  * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link resellMarketplaceAbi}__ and `functionName` set to `"delistProduct"`
  */
 export const useSimulateResellMarketplaceDelistProduct =
@@ -1050,6 +1111,15 @@ export const useSimulateResellMarketplaceMintProduct =
   /*#__PURE__*/ createUseSimulateContract({
     abi: resellMarketplaceAbi,
     functionName: 'mintProduct',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link resellMarketplaceAbi}__ and `functionName` set to `"onERC721Received"`
+ */
+export const useSimulateResellMarketplaceOnErc721Received =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: resellMarketplaceAbi,
+    functionName: 'onERC721Received',
   })
 
 /**

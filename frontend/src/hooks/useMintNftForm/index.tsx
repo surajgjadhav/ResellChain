@@ -20,6 +20,9 @@ export const mintNftFormSchema = z.object({
   manufacturer: z.string(),
   modelName: z.string(),
   price: z.string(),
+  dom: z.date({
+    required_error: "date of manufacture is required.",
+  }),
 });
 
 export type MintNftFormSchema = z.infer<typeof mintNftFormSchema>;

@@ -27,6 +27,7 @@ const Portfolio = () => {
     useReadResellMarketplaceGetMyNfts({
       address: rsMarketplaceAddress,
     });
+
   const listedNfts = useMemo(
     () => (myNfts ? myNfts.filter((nft) => nft.listed).length : 0),
     [myNfts]
@@ -74,6 +75,7 @@ const Portfolio = () => {
                 description={""}
                 imgSrc={""}
                 price={BigInt(0)}
+                tokenId={BigInt(0)}
                 listed={false}
                 isLoading={true}
               />
@@ -82,6 +84,7 @@ const Portfolio = () => {
                 description={""}
                 imgSrc={""}
                 price={BigInt(0)}
+                tokenId={BigInt(0)}
                 listed={false}
                 isLoading={true}
               />
@@ -90,6 +93,7 @@ const Portfolio = () => {
                 description={""}
                 imgSrc={""}
                 price={BigInt(0)}
+                tokenId={BigInt(0)}
                 listed={false}
                 isLoading={true}
               />
@@ -104,6 +108,7 @@ const Portfolio = () => {
               }) => (
                 <ProductCard
                   key={tokenId}
+                  tokenId={tokenId}
                   name={name}
                   description={description}
                   imgSrc={image}

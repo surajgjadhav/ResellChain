@@ -2,11 +2,12 @@ import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 import ResellNFTModule from "./ResellNFT";
 import { parseUnits } from "viem";
 
-const USDC_DECIMALS = 8;
+const USDC_DECIMALS = 6;
 const USDC_USD_PRICE = parseUnits("1", USDC_DECIMALS);
+const USDC_TRANSFER_AMOUNT = parseUnits("50", USDC_DECIMALS);
 const PRICE_FEED_HEART_BEAT = 24 * 60 * 60; // 24 hrs
 
-const MOCK_USDC_SUPPLY: bigint = BigInt(1000);
+const MOCK_USDC_SUPPLY: bigint = parseUnits("1000", USDC_DECIMALS);
 const USDC = "USDC";
 
 const ResellMarketplaceModule = buildModule("ResellMarketplaceModule", (m) => {
@@ -37,6 +38,13 @@ const ResellMarketplaceModule = buildModule("ResellMarketplaceModule", (m) => {
   ]);
 
   m.call(resellNFT, "setIssuer", [resellMarketplace]);
+
+  const user = m.getAccount(1);
+  console.log("user: ", user);
+
+  const usdctrfAmt = m.getParameter("amount", USDC_TRANSFER_AMOUNT);
+
+  m.call(mockUSDC, "transfer", [user, usdctrfAmt], { id: "userTrf" });
 
   return { resellNFT, mockUSDC, mockIEOFeedAdapter, resellMarketplace };
 });

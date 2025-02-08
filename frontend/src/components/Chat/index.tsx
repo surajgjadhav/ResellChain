@@ -11,7 +11,7 @@ import { useTransition, animated, type AnimatedProps } from "@react-spring/web";
 import { Paperclip, Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Content } from "@elizaos/core";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
 import { cn, moment } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";

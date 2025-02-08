@@ -1,4 +1,13 @@
+"use client";
+import { RoutePathEnum } from "@/enums/RoutePaths";
+import { useDelistProduct } from "@/hooks/useDelistProduct";
+import { useListProduct } from "@/hooks/useListProduct";
+import { getFormattedCurrency } from "@/lib/utils";
+import { Info } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { AspectRatio } from "../ui/aspect-ratio";
+import { Button } from "../ui/button";
 import {
   Card,
   CardContent,
@@ -7,14 +16,10 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
-import { AspectRatio } from "../ui/aspect-ratio";
-import { Button } from "../ui/button";
-import { Info } from "lucide-react";
-import { getFormattedCurrency } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
-import { Fragment } from "react";
 
 export interface ProductCardProps extends React.ComponentProps<typeof Card> {
+  tokenId: bigint;
   name: string;
   description: string;
   imgSrc: string;
@@ -24,6 +29,7 @@ export interface ProductCardProps extends React.ComponentProps<typeof Card> {
 }
 
 const ProductCard = ({
+  tokenId,
   name,
   description,
   imgSrc,
@@ -33,6 +39,19 @@ const ProductCard = ({
   isLoading = false,
   ...props
 }: ProductCardProps) => {
+  const { listProduct, isLoadingTrx: isLoadinglist } = useListProduct();
+  const { delistProduct, isLoadingTrx: isLoadingDelist } = useDelistProduct();
+
+  const isLoadingTransaction = isLoadinglist || isLoadingDelist;
+
+  const onClickButton = () => {
+    if (listed) {
+      delistProduct(tokenId);
+    } else {
+      listProduct(tokenId);
+    }
+  };
+
   return (
     <Card className={className} {...props}>
       <CardHeader>
@@ -70,12 +89,20 @@ const ProductCard = ({
         <Button
           className="grow"
           variant={listed ? "destructive" : "default"}
-          disabled={isLoading}
+          disabled={isLoading || isLoadingTransaction}
+          onClick={onClickButton}
         >
           {listed ? "Delist" : "List"}
         </Button>
-        <Button variant="outline" size="icon" disabled={isLoading}>
-          <Info />
+        <Button
+          variant="outline"
+          size="icon"
+          disabled={isLoading || isLoadingTransaction}
+          asChild
+        >
+          <Link href={`${RoutePathEnum.MARKETPLACE}/${tokenId}`}>
+            <Info />{" "}
+          </Link>
         </Button>
       </CardFooter>
     </Card>

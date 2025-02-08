@@ -49,7 +49,7 @@ export const useNftMetadata = ({
   enabled: boolean;
 }) => {
   console.log("NFTs: ", nfts);
-  const queryKey = nfts.map((nft) => serialize({ value: nft.id }));
+  const queryKey = nfts.map((nft) => serialize({ value: nft.tokenId }));
 
   return useQuery({
     queryFn: () => getNftMetadata(nfts),

@@ -1,5 +1,6 @@
 "use client";
 import Container from "@/components/Container";
+import TraitInfo from "@/components/TraitInfo";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,15 +16,63 @@ import {
   PageHeaderHeading,
 } from "@/components/ui/page-header";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { rsMarketplaceAddress } from "@/config/contract";
+import {
+  useReadResellMarketplaceGetNftDetails,
+  useReadResellMarketplaceGetValuationInUsdc,
+} from "@/generated";
+import { useNftMetadataByUri } from "@/hooks/useNftMetadata";
+import { formatUSDC, getFormattedCurrency } from "@/lib/utils";
 import { List } from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
+import { useMemo } from "react";
+import PageSkeleton from "./skeleton";
+import { useBuyProduct } from "@/hooks/useBuyProduct";
 
 const ProductDetails = () => {
   const params = useParams<{ cid: string }>();
   const { cid } = params;
 
   console.log(cid);
+
+  const { data: tokenDetails, isPending: isLoadingTokenDetails } =
+    useReadResellMarketplaceGetNftDetails({
+      address: rsMarketplaceAddress,
+      args: [BigInt(cid)],
+    });
+
+  const { data: tokenPriceUsdc, isPending: isLoadingTokenPriceUsdc } =
+    useReadResellMarketplaceGetValuationInUsdc({
+      address: rsMarketplaceAddress,
+      args: [BigInt(cid)],
+    });
+
+  const { data: metaData, isPending: isLoadingMetaData } = useNftMetadataByUri({
+    tokenURI: tokenDetails?.tokenURI || "",
+    enabled: !!tokenDetails?.tokenURI,
+  });
+
+  const { buyProduct, isLoadingTrx } = useBuyProduct();
+
+  const isLoading = useMemo(
+    () => isLoadingTokenDetails || isLoadingMetaData || isLoadingTokenPriceUsdc,
+    [isLoadingTokenDetails, isLoadingMetaData, isLoadingTokenPriceUsdc]
+  );
+
+  console.log("tokenPriceUsdc: ", tokenPriceUsdc);
+  console.log("tokenDetails: ", tokenDetails);
+
+  const onBuy = () => {
+    if (!!cid && !!tokenPriceUsdc) {
+      buyProduct(BigInt(cid), tokenPriceUsdc);
+    }
+  };
+
+  if (isLoading) {
+    return <PageSkeleton cid={cid} />;
+  }
 
   return (
     <Container>
@@ -34,21 +83,25 @@ const ProductDetails = () => {
 
       <div className="col-span-full md:col-span-6">
         <AspectRatio ratio={1} className="bg-muted">
-          <Image
-            src={"/logo.png"}
-            alt="mobile"
-            fill
-            className="h-full w-full rounded-md object-cover"
-          />
+          {isLoading ? (
+            <Skeleton className="h-full w-full rounded-md object-cover" />
+          ) : (
+            <Image
+              src={metaData?.image || ""}
+              alt="product image"
+              fill
+              className="h-full w-full rounded-md object-cover"
+            />
+          )}
         </AspectRatio>
       </div>
 
       <div className="flex flex-col space-y-1.5 md:p-6 col-span-full md:col-span-6">
         <div className="font-semibold leading-none text-lg tracking-tight">
-          List
+          {metaData?.name}
         </div>
         <div className="text-base text-muted-foreground">
-          Change your password here. After saving, you&apos;ll be logged out.
+          {metaData?.description}
         </div>
 
         <Card>
@@ -59,13 +112,21 @@ const ProductDetails = () => {
           <CardContent>
             <div className="flex flex-row justify-start items-end gap-4 py-2">
               <div className="font-semibold text-3xl tracking-tight">
-                1000 USDC
+                {tokenPriceUsdc ? formatUSDC(tokenPriceUsdc) : 0} USDC
               </div>
-              <div className="text-lg text-muted-foreground">$1000</div>
+              <div className="text-lg text-muted-foreground">
+                {getFormattedCurrency(tokenDetails?.price || 0)}
+              </div>
             </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full">Buy Now</Button>
+            <Button
+              className="w-full"
+              disabled={isLoading || !tokenDetails?.listed || isLoadingTrx}
+              onClick={onBuy}
+            >
+              Buy Now
+            </Button>
           </CardFooter>
         </Card>
       </div>
@@ -80,10 +141,9 @@ const ProductDetails = () => {
           <Separator />
           <CardContent className="p-6">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              <div className=" flex flex-col items-center rounded-md border p-2 bg-blue-100 border-blue-300">
-                <div className="font-semibold tracking-tight">Title</div>
-                <div className="text-base text-muted-foreground">value</div>
-              </div>
+              {metaData?.attributes.map(({ trait_type, value }) => (
+                <TraitInfo key={trait_type} title={trait_type} value={value} />
+              ))}
             </div>
           </CardContent>
         </Card>
