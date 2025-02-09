@@ -2,6 +2,7 @@
 
 import Container from "@/components/Container";
 import ProductCard from "@/components/ProductCard";
+import ProfileInfo from "@/components/ProfileInfo";
 import {
   Card,
   CardContent,
@@ -61,9 +62,23 @@ const Portfolio = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p>Address: {address}</p>
-          <p>Total Products: {myNfts?.length || 0}</p>
-          <p>Listed Products: {listedNfts}</p>
+          <div className="space-y-4">
+            <ProfileInfo
+              title="Address:"
+              value={address || ""}
+              isLoading={isLoading}
+            />
+            <ProfileInfo
+              title="Total Products:"
+              value={myNfts?.length || 0}
+              isLoading={isLoading}
+            />
+            <ProfileInfo
+              title="Listed Products:"
+              value={listedNfts}
+              isLoading={isLoading}
+            />
+          </div>
         </CardContent>
       </Card>
 
