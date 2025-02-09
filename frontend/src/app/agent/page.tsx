@@ -10,9 +10,12 @@ const Agent = () => {
   return (
     <Container>
       <PageHeader>
-        <PageHeaderHeading>Resell AI Agent</PageHeaderHeading>
+        <PageHeaderHeading>
+          Get Smart Insights with Our Resell AI Agent
+        </PageHeaderHeading>
         <PageHeaderDescription>
-          Ask your doubts to our resell AI agent{" "}
+          Predict prices, analyze trends, and explore detailed insights about
+          listed products.
         </PageHeaderDescription>
       </PageHeader>
       <div className="col-span-full border rounded">

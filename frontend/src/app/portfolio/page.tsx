@@ -47,13 +47,18 @@ const Portfolio = () => {
   return (
     <Container>
       <PageHeader>
-        <PageHeaderHeading>Portfolio</PageHeaderHeading>
-        <PageHeaderDescription>Your porfolio details</PageHeaderDescription>
+        <PageHeaderHeading>Manage Your Digital Portfolio</PageHeaderHeading>
+        <PageHeaderDescription>
+          View, track, and control your purchased and listed products in one
+          place.
+        </PageHeaderDescription>
       </PageHeader>
       <Card className="col-span-full">
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
-          <CardDescription>Profile Info</CardDescription>
+          <CardTitle>Profile Overview</CardTitle>
+          <CardDescription>
+            View your wallet details, listed products, and resell activity.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <p>Address: {address}</p>
@@ -64,8 +69,10 @@ const Portfolio = () => {
 
       <div className="col-span-full flex items-stretch flex-col rounded-md border ">
         <CardHeader>
-          <CardTitle>Your Products</CardTitle>
-          <CardDescription>Profile Info</CardDescription>
+          <CardTitle>Your Digital Assets</CardTitle>
+          <CardDescription>
+            Manage the products you&apos;ve minted as NFTs.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-3 gap-4">
           {isLoading ? (

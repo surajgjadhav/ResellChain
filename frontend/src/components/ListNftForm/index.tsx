@@ -22,8 +22,10 @@ const ListNftForm = ({ tokenId }: { tokenId: bigint }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>List Product</CardTitle>
-        <CardDescription>List Your Product to Marketplace.</CardDescription>
+        <CardTitle>List Product on Marketplace</CardTitle>
+        <CardDescription>
+          Put your product up for sale and connect with potential buyers.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
         <div className="space-y-1">

@@ -10,8 +10,11 @@ const List = () => {
   return (
     <Container>
       <PageHeader>
-        <PageHeaderHeading>List Your Product</PageHeaderHeading>
-        <PageHeaderDescription>Buy Products</PageHeaderDescription>
+        <PageHeaderHeading>Sell Your Assets with Confidence</PageHeaderHeading>
+        <PageHeaderDescription>
+          List your product securely and connect with potential buyers in the
+          decentralized marketplace.
+        </PageHeaderDescription>
       </PageHeader>
       <div className="col-span-full place-self-center">
         <ListNft />
