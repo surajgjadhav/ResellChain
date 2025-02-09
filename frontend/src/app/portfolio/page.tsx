@@ -27,6 +27,7 @@ const Portfolio = () => {
   const { data: myNfts, isFetching: isFetchingNfts } =
     useReadResellMarketplaceGetMyNfts({
       address: rsMarketplaceAddress,
+      account: address,
     });
 
   const listedNfts = useMemo(

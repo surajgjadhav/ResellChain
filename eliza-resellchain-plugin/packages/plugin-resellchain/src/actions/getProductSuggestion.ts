@@ -9,6 +9,7 @@ import {
     Memory,
     State,
     ModelClass,
+    generateText,
 } from "@elizaos/core";
 import { validateResellContractConfig } from "../environment";
 import { getProductSuggestionExamples } from "../examples";
@@ -42,23 +43,24 @@ export const getProductSuggestionAction: Action = {
         );
 
         try {
-            const prodctList = await resellService.getAllProducts();
+            const productList = await resellService.getAllProducts();
             const state = await runtime.composeState(message);
 
             // Compose transfer context
             const context = composeContext({
-                state: { ...state, prodctList },
+                state: {
+                    ...state,
+                    productList,
+                    userMessage: message.content.text,
+                },
                 template: resellProductSuggestionTemplate,
             });
 
-            const res = await generateObject({
+            const text = await generateText({
                 runtime,
                 context,
                 modelClass: ModelClass.LARGE,
-                schema: z.string(),
             });
-
-            const text = res.object as string;
 
             elizaLogger.log("Resell Agent Resp: ", text);
 

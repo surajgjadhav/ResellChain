@@ -1,10 +1,10 @@
 import { createPublicClient, http, parseAbi } from "viem";
-import { hardhat } from "viem/chains";
+import { arbitrumSepolia } from "viem/chains";
 
 // Set up Viem client (use your chain's RPC URL)
 const client = createPublicClient({
-    chain: hardhat,
-    transport: http("http://127.0.0.1:8545/"), // Replace with your RPC
+    chain: arbitrumSepolia,
+    transport: http("https://sepolia-rollup.arbitrum.io/rpc"), // Replace with your RPC
 });
 
 // Contract details

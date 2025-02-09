@@ -102,6 +102,7 @@ const MintNftForm = ({
       console.log("Minted Token ID:", tokenId);
       goToListNft(tokenId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reciptStatus, receipt]);
 
   async function onSubmit(data: MintNftFormSchema) {

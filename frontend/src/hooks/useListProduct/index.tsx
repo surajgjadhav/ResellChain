@@ -22,7 +22,7 @@ export const useListProduct = () => {
 
   const isLoadingTrx = useMemo(
     () => isApprovalPending || isListingPending,
-    [isApprovalPending || isListingPending]
+    [isApprovalPending, isListingPending]
   );
 
   const listProduct = async (tokenId: bigint) => {
