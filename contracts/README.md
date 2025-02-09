@@ -1,15 +1,11 @@
-# Sports Prediction Game: Contracts
+# Resell Chain: Contracts
 
-This directory is a Hardhat project which is based on the [Chainlink Functions Hardhat Starter Kit](https://github.com/smartcontractkit/functions-hardhat-starter-kit).
-
-It contains the smart contracts for the sports prediction game:
+It contains the smart contracts for the Resell Chain:
 
 - [`ResellMarketplace.sol`](./contracts/ResellMarketplace.sol) - the main contract which handles the marketplace logic
 - [`ResellNFT.sol`](./contracts/ResellNFT.sol) - contract to provide Resell product token in ERC-721 format.
 - [`IEOFeedAdapter.sol`](./contracts/interfaces/IEOFeedAdapter.sol) - Interface to interact with eOracle Price Feed (EiganLayer AVS)
 - [`mocks`](./contracts/mocks/) - this folder contains mock contracts of IEOFeedAdapter and ERC20 to work with local development.
-
-Additionally, it contains the Chainlink Functions [script](./sports-api.js) executed by each node of the DON which requests the results from the Sports API.
 
 ## Supported Network
 
