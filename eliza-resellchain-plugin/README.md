@@ -1,10 +1,51 @@
 # Eliza Resell Product Contract Plugin
 
-This is the codebase for building a Resell Product Suggestion plugin.
+This is the codebase for building a Resell AI Agent based on GAIA LLM Model.
 
-Plugin code is located at `plugins/plugin-resellchain`.
+AI Agent helps user in following tasks:
 
-------------------------
+- predict price for the product - using real world data.
+- Suggest Resell Products to the user - using information from Resell Marketplace contract
+
+Plugin code is located at [`packages/plugin-resellchain`](./packages/plugin-resellchain/).
+
+### Prerequisites
+
+- [Python 2.7+](https://www.python.org/downloads/)
+- [Node.js 23+](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+- [pnpm](https://pnpm.io/installation)
+
+## Getting Started
+
+Install all dependencies:
+
+```bash
+pnpm install
+```
+
+Set environment variables by copying `.env.example` to `.env` and filling in the values:
+
+- _NNEXT_PUBLIC_RS_MARKETPLACE_ADDRESS_ for the deployed Resell Marketplace contract address
+- _GAIANET_MODEL_ for GAIANET Model name
+- _GAIANET_SERVER_URL_ for GAIANET model API
+- _LARGE_GAIANET_MODEL_ for GAIANET Large model name
+- _LARGE_GAIANET_SERVER_URL_ for GAIANET Large model API
+
+build:
+
+```bash
+pnpm build
+```
+
+run the build:
+
+```bash
+pnpm start
+```
+
+Server will start on port 3000 on which you can interact with our Resell Agent Model
+
+---
 
 # Eliza 🤖
 
