@@ -2,6 +2,7 @@
 
 import Container from "@/components/Container";
 import ProductCard from "@/components/ProductCard";
+import ProfileInfo from "@/components/ProfileInfo";
 import {
   Card,
   CardContent,
@@ -26,6 +27,7 @@ const Portfolio = () => {
   const { data: myNfts, isFetching: isFetchingNfts } =
     useReadResellMarketplaceGetMyNfts({
       address: rsMarketplaceAddress,
+      account: address,
     });
 
   const listedNfts = useMemo(
@@ -47,25 +49,46 @@ const Portfolio = () => {
   return (
     <Container>
       <PageHeader>
-        <PageHeaderHeading>Portfolio</PageHeaderHeading>
-        <PageHeaderDescription>Your porfolio details</PageHeaderDescription>
+        <PageHeaderHeading>Manage Your Digital Portfolio</PageHeaderHeading>
+        <PageHeaderDescription>
+          View, track, and control your purchased and listed products in one
+          place.
+        </PageHeaderDescription>
       </PageHeader>
       <Card className="col-span-full">
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
-          <CardDescription>Profile Info</CardDescription>
+          <CardTitle>Profile Overview</CardTitle>
+          <CardDescription>
+            View your wallet details, listed products, and resell activity.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <p>Address: {address}</p>
-          <p>Total Products: {myNfts?.length || 0}</p>
-          <p>Listed Products: {listedNfts}</p>
+          <div className="space-y-4">
+            <ProfileInfo
+              title="Address:"
+              value={address || ""}
+              isLoading={isLoading}
+            />
+            <ProfileInfo
+              title="Total Products:"
+              value={myNfts?.length || 0}
+              isLoading={isLoading}
+            />
+            <ProfileInfo
+              title="Listed Products:"
+              value={listedNfts}
+              isLoading={isLoading}
+            />
+          </div>
         </CardContent>
       </Card>
 
       <div className="col-span-full flex items-stretch flex-col rounded-md border ">
         <CardHeader>
-          <CardTitle>Your Products</CardTitle>
-          <CardDescription>Profile Info</CardDescription>
+          <CardTitle>Your Digital Assets</CardTitle>
+          <CardDescription>
+            Manage the products you&apos;ve minted as NFTs.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-3 gap-4">
           {isLoading ? (

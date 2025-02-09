@@ -1,0 +1,10 @@
+*.ts
+!index.ts
+!character.ts
+!nader.character.ts
+!resellAgent.character.ts
+.env
+*.env
+.env*
+/data
+/generatedImages

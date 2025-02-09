@@ -30,7 +30,9 @@ const Marketplace = () => {
     <Container>
       <PageHeader>
         <PageHeaderHeading>Marketplace</PageHeaderHeading>
-        <PageHeaderDescription>Buy Products</PageHeaderDescription>
+        <PageHeaderDescription>
+          Browse a decentralized marketplace for unique and resellable products.
+        </PageHeaderDescription>
       </PageHeader>
 
       <div className="col-span-full grid grid-cols-2 md:grid-cols-3 gap-4">

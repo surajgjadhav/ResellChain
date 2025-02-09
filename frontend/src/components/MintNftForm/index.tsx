@@ -102,6 +102,7 @@ const MintNftForm = ({
       console.log("Minted Token ID:", tokenId);
       goToListNft(tokenId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reciptStatus, receipt]);
 
   async function onSubmit(data: MintNftFormSchema) {
@@ -151,9 +152,9 @@ const MintNftForm = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Mint NFT</CardTitle>
+        <CardTitle>Mint Product Token</CardTitle>
         <CardDescription>
-          Make changes to your account here. Click save when you&apos;re done.
+          Create a tokenized asset for your product on the blockchain.
         </CardDescription>
       </CardHeader>
       <Form {...form}>
@@ -169,12 +170,12 @@ const MintNftForm = ({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Product Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="name" {...field} />
+                    <Input placeholder="Name" {...field} />
                   </FormControl>
                   <FormDescription>
-                    This is your product&apos;s display name.
+                    Enter the name of your product.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -185,12 +186,12 @@ const MintNftForm = ({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Input placeholder="description" {...field} />
+                    <Input placeholder="Description" {...field} />
                   </FormControl>
                   <FormDescription>
-                    This is your product&apos;s display name.
+                    Briefly describe the product and its key features.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -201,7 +202,7 @@ const MintNftForm = ({
               name="image"
               render={({ field: { onChange } }) => (
                 <FormItem>
-                  <FormLabel>Image</FormLabel>
+                  <FormLabel>Product Image</FormLabel>
                   <FormControl>
                     <Input
                       type="file"
@@ -215,7 +216,9 @@ const MintNftForm = ({
                       }}
                     />
                   </FormControl>
-                  <FormDescription>Image of your product.</FormDescription>
+                  <FormDescription>
+                    Upload a clear image of your product.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -227,10 +230,10 @@ const MintNftForm = ({
                 <FormItem>
                   <FormLabel>Manufacturer</FormLabel>
                   <FormControl>
-                    <Input placeholder="manufacturer" {...field} />
+                    <Input placeholder="Manufacturer" {...field} />
                   </FormControl>
                   <FormDescription>
-                    Name of the product manufacturer.
+                    Enter the brand or company that made this product.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -243,9 +246,11 @@ const MintNftForm = ({
                 <FormItem>
                   <FormLabel>Model Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Model name" {...field} />
+                    <Input placeholder="Model Name" {...field} />
                   </FormControl>
-                  <FormDescription>Name of the product model.</FormDescription>
+                  <FormDescription>
+                    Specify the model or version of the product.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -263,7 +268,9 @@ const MintNftForm = ({
                       onWheel={(e) => e.currentTarget.blur()}
                     />
                   </FormControl>
-                  <FormDescription>Price of the product.</FormDescription>
+                  <FormDescription>
+                    Set the price in USD for buyers.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -302,7 +309,7 @@ const MintNftForm = ({
                     </PopoverContent>
                   </Popover>
                   <FormDescription>
-                    Your date of birth is used to calculate your age.
+                    Select the manufacturing date of the product.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

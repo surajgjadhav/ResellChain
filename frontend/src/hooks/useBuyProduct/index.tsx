@@ -23,7 +23,7 @@ export const useBuyProduct = () => {
 
   const isLoadingTrx = useMemo(
     () => isApprovalPending || isBuyingPending,
-    [isApprovalPending || isBuyingPending]
+    [isApprovalPending, isBuyingPending]
   );
 
   const buyProduct = async (tokenId: bigint, amount: bigint) => {
