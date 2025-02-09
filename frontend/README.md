@@ -9,8 +9,10 @@ It contains frontend for the ResellChain App to interact with Resell Marketplace
 Install all dependencies:
 
 ```bash
-npm install
+npm install --legacy-peer-deps
 ```
+
+Note: Shadcn is having depency issue with latest React version. so, we will need to add `--legacy-peer-deps` to avoid erros
 
 Set environment variables by copying `.env.example` to `.env` and filling in the values:
 
